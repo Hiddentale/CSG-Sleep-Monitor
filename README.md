@@ -1,4 +1,4 @@
-# ECG Sleep Monitor
+# CCG Sleep Monitor
 
 A DIY sleep monitoring system using single-lead ECG and machine learning for sleep stage classification, built on Raspberry Pi Pico.
 
