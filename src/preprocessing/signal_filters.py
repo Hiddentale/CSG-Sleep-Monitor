@@ -34,19 +34,3 @@ def remove_powerline_noise(ecg_signal: np.ndarray, sampling_rate: int, powerline
         ECG signal with powerline noise removed
     """
     pass
-
-def detect_and_remove_noise_frequencies(ecg_signal: np.ndarray, sampling_rate: int, 
-                                       max_frequencies: int = 3) -> tuple[np.ndarray, list]:
-    """
-    6
-    Automatically detect and remove constant-frequency noise using notch filters.
-    
-    Args:
-        ecg_signal: ECG signal array
-        sampling_rate: Sampling frequency in Hz
-        max_frequencies: Maximum number of noise frequencies to detect and remove
-        
-    Returns:
-        Tuple of (filtered_signal, list_of_detected_frequencies)
-    """
-    pass

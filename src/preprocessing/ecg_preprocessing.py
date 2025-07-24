@@ -119,6 +119,22 @@ def calculate_normalization_factor(ecg_signal: np.ndarray, heartbeat_indices: np
     """
     pass
 
+def detect_and_remove_noise_frequencies(ecg_signal: np.ndarray, sampling_rate: int, 
+                                       max_frequencies: int = 3) -> tuple[np.ndarray, list]:
+    """
+    6
+    Automatically detect and remove constant-frequency noise using notch filters.
+    
+    Args:
+        ecg_signal: ECG signal array
+        sampling_rate: Sampling frequency in Hz
+        max_frequencies: Maximum number of noise frequencies to detect and remove
+        
+    Returns:
+        Tuple of (filtered_signal, list_of_detected_frequencies)
+    """
+    pass
+
 
 def normalize_and_clip_signal(ecg_signal: np.ndarray, normalization_factor: float, 
                             clip_range: tuple = (-1.0, 1.0)) -> np.ndarray:
@@ -150,7 +166,50 @@ def preprocess_ecg_pipeline(raw_ecg: np.ndarray, sampling_rate: int) -> dict:
             - 'normalization_factor': Applied normalization factor
             - 'quality_metrics': Recording quality assessment
     """
-    trimmed_raw_ecg = trim_to_epoch_boundaries(raw_ecg, sampling_rate)
-    cleaned_raw_ecg = silence_connection_artifacts(trimmed_raw_ecg)
-    filtered_ecg = apply_highpass_filter(cleaned_raw_ecg, sampling_rate)
+    print("Starting ECG preprocessing pipeline...")
     
+    # =============================================================================
+    # STEP 1: BASIC SIGNAL PREPARATION
+    # =============================================================================
+    print("Step 1: Basic signal preparation")
+    signal = trim_to_epoch_boundaries(raw_ecg, sampling_rate)
+    signal = silence_connection_artifacts(signal)
+    
+    # =============================================================================
+    # STEP 2: FREQUENCY DOMAIN FILTERING  
+    # =============================================================================
+    print("Step 2: Frequency domain filtering")
+    signal = apply_highpass_filter(signal, sampling_rate)
+    signal = remove_powerline_noise(signal, sampling_rate)
+    signal, detected_freqs = detect_and_remove_noise_frequencies(signal, sampling_rate)
+    
+    # =============================================================================
+    # STEP 3: SIGNAL STANDARDIZATION
+    # =============================================================================
+    print("Step 3: Signal standardization")
+    signal = resample_to_target_frequency(signal, sampling_rate, target_rate=256)
+    signal = normalize_with_robust_zscore(signal)
+    sampling_rate = 256  # Update sampling rate after resampling
+    
+    # =============================================================================
+    # STEP 4: HEARTBEAT DETECTION & NORMALIZATION
+    # =============================================================================
+    print("Step 4: Heartbeat detection and normalization")
+    heartbeat_indices = detect_heartbeats_template_matching(signal, sampling_rate)
+    normalization_factor = calculate_normalization_factor(signal, heartbeat_indices)
+    signal = normalize_and_clip_signal(signal, normalization_factor)
+    
+    # =============================================================================
+    # STEP 5: QUALITY VALIDATION
+    # =============================================================================
+    print("Step 5: Quality validation")
+    quality_metrics = validate_recording_quality(signal, heartbeat_indices, sampling_rate)
+    
+    print(f"🎉 Preprocessing complete! Quality score: {quality_metrics.get('overall_score', 'N/A')}")
+    
+    return {
+        'processed_ecg': signal,
+        'heartbeat_indices': heartbeat_indices,
+        'normalization_factor': normalization_factor,
+        'quality_metrics': quality_metrics
+    }
