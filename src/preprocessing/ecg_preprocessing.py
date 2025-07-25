@@ -29,7 +29,7 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, sampling_rate: int, epoch_l
     final_time = ecg_signal[-1][0]
     number_of_possible_epochs = final_time // epoch_length_seconds
     target_endpoint = epoch_length_seconds * number_of_possible_epochs
-    target_index = np.where(ecg_signal[:, 0] > target_endpoint)[0][0]
+    target_index = np.searchsorted(ecg_signal[:, 0], target_endpoint, side='right')
     trimmed_ecg_signal = ecg_signal[:target_index]
     return trimmed_ecg_signal
 
