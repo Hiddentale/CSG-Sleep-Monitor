@@ -5,7 +5,7 @@ This module implements the preprocessing methodology from:
 "Expert-level sleep staging using an electrocardiography-only feed-forward neural network"
 by Jones et al. (2024)
 """
-
+import math
 import numpy as np
 
 from .signal_filters import apply_highpass_filter, remove_powerline_noise
@@ -26,7 +26,12 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, sampling_rate: int, epoch_l
     Returns:
         Trimmed ECG signal with length as multiple of epoch_length_seconds
     """
-    pass
+    final_time = ecg_signal[-1][0]
+    number_of_possible_epochs = final_time // epoch_length_seconds
+    target_endpoint = epoch_length_seconds * number_of_possible_epochs
+    target_index = np.where(ecg_signal[:, 0] > target_endpoint)[0][0]
+    trimmed_ecg_signal = ecg_signal[:target_index]
+    return trimmed_ecg_signal
 
 def silence_connection_artifacts(ecg_signal: np.ndarray, connection_mask: np.ndarray) -> np.ndarray:
     """
@@ -205,7 +210,7 @@ def preprocess_ecg_pipeline(raw_ecg: np.ndarray, sampling_rate: int) -> dict:
     print("Step 5: Quality validation")
     quality_metrics = validate_recording_quality(signal, heartbeat_indices, sampling_rate)
     
-    print(f"🎉 Preprocessing complete! Quality score: {quality_metrics.get('overall_score', 'N/A')}")
+    print(f"Preprocessing complete! Quality score: {quality_metrics.get('overall_score', 'N/A')}")
     
     return {
         'processed_ecg': signal,
