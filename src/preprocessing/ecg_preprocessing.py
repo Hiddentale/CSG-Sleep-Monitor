@@ -7,6 +7,7 @@ by Jones et al. (2024)
 """
 import math
 import numpy as np
+import polars as pl
 
 from .signal_filters import apply_highpass_filter, remove_powerline_noise
 from .heartbeat_detection import detect_heartbeats_template_matching
@@ -33,7 +34,7 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, sampling_rate: int, epoch_l
     trimmed_ecg_signal = ecg_signal[:target_index]
     return trimmed_ecg_signal
 
-def silence_connection_artifacts(ecg_signal: np.ndarray, connection_mask: np.ndarray) -> np.ndarray:
+def silence_connection_artifacts(ecg_signal: np.ndarray) -> np.ndarray:
     """
     2
     Set signal values to zero in sections with intermittent electrode connections.
@@ -45,7 +46,11 @@ def silence_connection_artifacts(ecg_signal: np.ndarray, connection_mask: np.nda
     Returns:
         ECG signal with disconnected sections set to zero
     """
-    pass
+    time_values, ecg_values = ecg_signal[0], ecg_signal[1]
+    upper_target = np.max(ecg_values)
+    lower_target = np.min(ecg_values)
+    #clip_space = np.full_like(ecg_values, 0)
+    clip_space = pl.Dataframe()
 
 def resample_to_target_frequency(ecg_signal: np.ndarray, original_rate: int, target_rate: int = 256) -> np.ndarray:
     """
