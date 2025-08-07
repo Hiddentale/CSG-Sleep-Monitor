@@ -9,12 +9,12 @@ import math
 import numpy as np
 import polars as pl
 
-from .signal_filters import apply_highpass_filter, remove_powerline_noise
-from .heartbeat_detection import detect_heartbeats_template_matching
-from .quality_validation import validate_recording_quality
+#from .signal_filters import apply_highpass_filter, remove_powerline_noise
+#from .heartbeat_detection import detect_heartbeats_template_matching
+#from .quality_validation import validate_recording_quality
 
 
-def trim_to_epoch_boundaries(ecg_signal: np.ndarray, sampling_rate: int, epoch_length_seconds: int = 30) -> np.ndarray:
+def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length_seconds: int = 30) -> np.ndarray:
     """
     1
     Trim ECG signal to the nearest 30-second epoch boundary.
@@ -223,3 +223,14 @@ def preprocess_ecg_pipeline(raw_ecg: np.ndarray, sampling_rate: int) -> dict:
         'normalization_factor': normalization_factor,
         'quality_metrics': quality_metrics
     }
+
+def main():
+    import polars as pl
+
+
+    data_frame = pl.read_csv("src/preprocessing/test_ecg_data.txt")
+    print(data_frame)
+    trimmed_data_frame = trim_to_epoch_boundaries(data_frame)
+    print(trimmed_data_frame)
+
+main()
