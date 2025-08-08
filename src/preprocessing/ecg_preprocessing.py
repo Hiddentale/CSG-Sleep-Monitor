@@ -14,7 +14,7 @@ import polars as pl
 #from .quality_validation import validate_recording_quality
 
 
-def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length_seconds: int = 30) -> np.ndarray:
+def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length: int = 30) -> pl.DataFrame:
     """
     1
     Trim ECG signal to the nearest 30-second epoch boundary.
@@ -27,12 +27,10 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length_seconds: int =
     Returns:
         Trimmed ECG signal with length as multiple of epoch_length_seconds
     """
-    final_time = ecg_signal[-1][0]
-    number_of_possible_epochs = final_time // epoch_length_seconds
-    target_endpoint = epoch_length_seconds * number_of_possible_epochs
-    target_index = np.searchsorted(ecg_signal[:, 0], target_endpoint, side='right')
-    trimmed_ecg_signal = ecg_signal[:target_index]
-    return trimmed_ecg_signal
+    final_timestamp_ms = ecg_signal[-1, 0]
+    complete_epochs = int(final_timestamp_ms // epoch_length)
+    target_endpoint_ms = complete_epochs * epoch_length
+    return ecg_signal.filter(pl.col("timestamp_ms") <= target_endpoint_ms)
 
 def silence_connection_artifacts(ecg_signal: np.ndarray) -> np.ndarray:
     """
@@ -227,10 +225,7 @@ def preprocess_ecg_pipeline(raw_ecg: np.ndarray, sampling_rate: int) -> dict:
 def main():
     import polars as pl
 
-
     data_frame = pl.read_csv("src/preprocessing/test_ecg_data.txt")
-    print(data_frame)
     trimmed_data_frame = trim_to_epoch_boundaries(data_frame)
-    print(trimmed_data_frame)
 
 main()
