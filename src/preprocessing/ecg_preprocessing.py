@@ -22,10 +22,10 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length: int = 30) -> 
     Args:
         ecg_signal: Raw ECG signal array
         sampling_rate: Sampling frequency in Hz
-        epoch_length_seconds: Length of each epoch in seconds (default: 30)
+        epoch_length: Length of each epoch in miliseconds (default: 30)
         
     Returns:
-        Trimmed ECG signal with length as multiple of epoch_length_seconds
+        Trimmed ECG signal with length as multiple of epoch_length
     """
     final_timestamp_ms = ecg_signal[-1, 0]
     complete_epochs = int(final_timestamp_ms // epoch_length)
