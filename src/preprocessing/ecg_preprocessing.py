@@ -14,7 +14,7 @@ import polars as pl
 #from .quality_validation import validate_recording_quality
 
 
-def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length: int = 30) -> pl.DataFrame:
+def trim_to_epoch_boundaries(ecg_signal: pl.DataFrame, epoch_length: int = 30) -> pl.DataFrame:
     """
     1
     Trim ECG signal to the nearest 30-second epoch boundary.
@@ -32,7 +32,7 @@ def trim_to_epoch_boundaries(ecg_signal: np.ndarray, epoch_length: int = 30) -> 
     target_endpoint_ms = complete_epochs * epoch_length
     return ecg_signal.filter(pl.col("timestamp_ms") <= target_endpoint_ms)
 
-def silence_connection_artifacts(ecg_signal: np.ndarray) -> np.ndarray:
+def silence_connection_artifacts(ecg_signal: pl.DataFrame, sampling_rate: int = 256) -> pl.DataFrame:
     """
     2
     Set signal values to zero in sections with intermittent electrode connections.
@@ -44,11 +44,22 @@ def silence_connection_artifacts(ecg_signal: np.ndarray) -> np.ndarray:
     Returns:
         ECG signal with disconnected sections set to zero
     """
-    time_values, ecg_values = ecg_signal[0], ecg_signal[1]
-    upper_target = np.max(ecg_values)
-    lower_target = np.min(ecg_values)
-    #clip_space = np.full_like(ecg_values, 0)
-    clip_space = pl.Dataframe()
+    connection_mask = create_connection_mask(ecg_signal, sampling_rate)
+
+    expressions = []
+    for column in ecg_signal.columns:
+        good_samples = ecg_signal[column].filter(connection_mask(column))
+        median_value = good_samples.median()
+
+        processed = (ecg_signal(column) - median_value) * connection_mask[column].cast(pl.float64)
+        expressions.append(processed.alias(column))
+
+    processed_signal = pl.Dataframe().with_columns(expressions)
+
+    return processed_signal
+
+def create_connection_mask(ecg_signal: pl.DataFrame, sampling_rate: int = 256) -> pl.DataFrame:
+    return None
 
 def resample_to_target_frequency(ecg_signal: np.ndarray, original_rate: int, target_rate: int = 256) -> np.ndarray:
     """
