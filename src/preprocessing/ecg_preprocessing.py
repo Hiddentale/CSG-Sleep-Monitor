@@ -5,7 +5,6 @@ This module implements the preprocessing methodology from:
 "Expert-level sleep staging using an electrocardiography-only feed-forward neural network"
 by Jones et al. (2024)
 """
-import math
 import numpy as np
 import polars as pl
 
@@ -16,7 +15,6 @@ import polars as pl
 
 def trim_to_epoch_boundaries(ecg_signal: pl.DataFrame, epoch_length: int = 30) -> pl.DataFrame:
     """
-    1
     Trim ECG signal to the nearest 30-second epoch boundary.
     
     Args:
@@ -237,6 +235,8 @@ def main():
     import polars as pl
 
     data_frame = pl.read_csv("src/preprocessing/test_ecg_data.txt")
+    print(data_frame)
     trimmed_data_frame = trim_to_epoch_boundaries(data_frame)
+    print(trimmed_data_frame)
 
 main()
